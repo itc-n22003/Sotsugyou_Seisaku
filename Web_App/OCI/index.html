@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>OCIの解説</title>
+  <link rel="stylesheet" href="./oci.scss">
+</head>
+<body>
+  <div class="top">
+    <h1>OS Command Injectionについて</h1>
+    <div class="check">
+      <input type="checkbox" id="change">
+      <label for="change"/>
+    </div>
+    <p class="desc">作業用</p>
+  </div>
+  <p>OSコマンドインジェクションとは、ウェブサイトやウェブアプリの脆弱性を利用した攻撃手法の1つです。</p>
+  <p>OSコマンドインジェクションでは、ユーザからのデータ入力を受け付けるWebサイトで、入力時にシェル機能を操作する文字列を混入させることで、攻撃先サイトのOSを不正に操作します。</p>
+  <p>OSコマンドインジェクションは、ウェブサーバーに好きな命令を実行させる攻撃です。機密情報の漏洩だけでなく、ファイルの改ざんなども行われます。</p>
+
+  <h2>デモページについて</h2>
+  <p>デモとして制作したページ(level0.php)は、pingの疎通を確認するページで、IPアドレスを入力するとそのアドレスにpingを3回送信するページです。</p>
+  <p>試しにテキストエリアに<code class="value">127.0.0.1</code>と入力すると以下のようになります。</p>
+
+  <img src="./oci/oci1.png">
+
+  <p>この場合、phpのpassthru関数(Linuxでコマンドを実行する関数)で以下のコマンドが実行されます。</p>
+  <code class="php">passthru("ping -c 3 $target_address");</code>
+  <p>この<code class="val">$target_address</code>には入力した<code class="value">127.0.0.1</code>が代入されているので以下のようになります。</p>
+  <code class="php">passthru("ping -c 3 127.0.0.1");</code>
+  <p>このコマンドが実行されると、pingを<code class="value">127.0.0.1</code>に対して送信している様子が表示されます。</p>
+  <br>
+
+  <p>ここにIPアドレスの代わりに<code class="value">; whoami</code>と入力すると以下のようになります。</p>
+
+  <img src="./oci/oci2.png">
+
+  <p>この場合、passthru関数では<code class="val">$target_address</code>に<code class="value">; whoami</code>が代入されて以下のようになります。</p>
+  <code class="php">passthru("ping -c 3; whoami");</code>
+  <p>これによって、<code class="value">whoami</code>の前にまず<code class="value">ping -c3</code>が実行されますがIPアドレスを入力していないので、コマンドは失敗します。</p>
+  <p>ですが入力した<code class="value">;(コロン)</code>があるので、前のコマンドが成功しても失敗しても次のコマンドの<code class="value">whoami</code>が実行されて<code class="value">www-data</code>が表示されました。</p>
+
+  <h2>まとめ</h2>
+  <p>上記で説明したように、ユーザーからの入力を確認せずに実行することで、サーバーのOSが上で任意のコマンドを実行することができるの脆弱性がOSコマンドインジェクション(OS Command Injection)です。</p>
+
+  <h2>デモページ</h2>
+  <p>以下のデモページの全てで<code class="value">/etc/passwd</code>ファイルを表示させてみてください。</p>
+  <ul>
+    <li>
+      <p>
+        <a href="./level0.php">Level 0</a> 入力に対してフィルタリング無し
+      </p>
+    </li>
+    <li>
+      <p>
+        <a href="./level1.php">Level 1</a> catコマンドをフィルタリング
+    </li>
+    <li>
+      <p>
+        <a href="./level2.php">Level 2</a> 他のコマンドもフィルタリング
+      </p>
+    </li>
+    <li>
+      <p>
+        <a href="./level3.php">Level 3</a> 一部の演算子をフィルタリング
+      </p>
+    </li>
+  </ul>
+  <script src="./main.js"></script>
+</body>
+</html>

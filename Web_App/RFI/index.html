@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>RFIの解説</title>
+  <link rel="stylesheet" href="./rfi.scss">
+</head>
+<body>
+  <div class="top">
+    <h1>Remote File Includeについて</h1>
+    <div class="check">
+      <input type="checkbox" id="change">
+      <label for="change"/>
+    </div>
+    <p class="desc">作業用</p>
+  </div>
+  <p>リモート・ファイル・インクルード（RFI）は、Webアプリケーションにおける外部ファイル参照機能を悪用する脆弱性です。</p>
+  <p>RFIでは、悪意のある第三者が外部に作成し、用意したコードをサーバーが読み込んでしまうことで、本来サーバー上にはないデータやコードを実行させられてしまうことです。</p>
+  <p>RFIは、スクリプト言語のPHPで作成されたWebアプリケーションのぜい弱性を突くことで、リモートからWebページに攻撃コードを挿入し実行させる攻撃です。</p>
+
+  <h2>デモページについて</h2>
+  <p>デモとして制作したページ(level0.php)は、同じディレクトリにあるlogディレクトリやpicturesディレクトリのファイルを選択してWebページ上に表示するページです。</p>
+  <p>このページのテキストエリアに<code class="value">tsukishironomiya1.jpg</code>と入力すると以下のようになります。</p>
+
+  <img src=./rfi/rfi1.png width="90%">
+
+  <p>jpgファイルの場合、phpでは以下のようなコマンドが実行されています。</p>
+  <code class="php">echo "&lt;img src=./pictures/$file width=100%&gt;";</code>
+  <p>この<code class="val">$file</code>には入力した<code class="value">tsukishironomiya1.jpg</code>が代入されているので以下のようになります。</p>
+  <code class="php">echo "&lt;img src=./pictures/tsukishironomiya1.jpg width=100%&gt;";</code>
+  <p>このコマンドが実行されると、htmlでは<code class="value">&lt;img src=./pictures/tsukishironomiya1.jpg width=100%&gt;</code>が実行されて画像が表示されます。</p>
+  <br>
+
+  <p>また<code class="value">error.log</code>と入力すると以下のようになります。</p>
+
+  <img src=./rfi/rfi2.png width=90%>
+
+  <p>logファイルの場合、phpでは以下のようなコマンドが実行されます。</p>
+  <code class="php">file_get_contents("./log/$file");</code>
+  <p>この<code class="val">$file</code>には入力した<code class="value">error.log</code>が代入されているので以下のようになります。</p>
+  <code class="php">file_get_contents("./log/error.log");</code>
+  <p>このコマンドが実行されると、logディレクトリにある<code class="value">error.log</code>の内容を表示します。</p>
+  <br>
+
+  <p>ここにjpgファイルやlogファイルの代わりに<code class="value">https://image.bikebros.co.jp/bike_img/0/8916/1_l.jpg</code>を入力すると以下のようになります。</p>
+
+  <img src=./rfi/rfi3.png width=90%>
+
+  <p>urlを入力するとphpのfile_get_contents関数で外部のサーバーのファイルを読み込みます。</p>
+  <p>phpでは以下のようになっています。</p>
+  <code class="php">file_get_contents($file);</code>
+  <p/>この<code class="val">$file</code>には<code class="value">https://image.bikebros.co.jp/bike_img/0/8916/1_l.jpg</code>が入っているので以下のようになります。</p>
+  <code class="php">file_get_contents("https://image.bikebros.co.jp/bike_img/0/8916/1_l.jpg");</code>
+  <p>このコマンドで外部のファイルを読み込めるようになっています。</p>
+
+  <h2>まとめ</h2>
+  <p>上記で説明したように、ユーザーからの入力を確認しないことで外部のサーバー上のファイルを読み込むことできる脆弱性がリモートファイルインクルード(Remote File Include)です。</p>
+
+  <h2>デモページ</h2>
+  <p>同じマシンでPython3のhttp.serverモジュールでサーバーを立てています。</p>
+  <p>IPアドレスは127.0.0.1でポートは12345で立てているので、そこにあるファイルを表示させてみてください。</p>
+  <ul>
+    <li>
+      <p>
+        <a href="./level0.php">Level 0</a> 入力に対してフィルタリング無し
+      </p>
+    </li>
+    <li>
+      <p>
+        <a href="./level1.php">Level 1</a> jpgの場合は./jpgの下で、logの場合は./logの下でコマンドを実行 （ここで詰まってます。）
+      </p>
+    </li>
+  </ul>
+  <script src="./main.js"></script>
+</body>
+</html>

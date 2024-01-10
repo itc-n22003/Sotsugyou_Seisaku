@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>LFIの解説</title>
+  <link rel="stylesheet" href="./lfi.scss">
+</head>
+<body>
+  <div class="top">
+    <h1>Local File Includeについて</h1>
+    <div class="check">
+      <input type="checkbox" id="change">
+      <label for="change"/>
+    </div>
+    <p class="desc">作業用</p>
+  </div>
+  <p>ローカルファイルインクルード（LFI）とは、攻撃者がWebアプリケションを介してサーバー内のファイルを不正に読み込むことができる脆弱性です。</p>
+  <p>LFIでは、攻撃者がローカル・サーバ上に存在するファイル名を、ヘッダやフォーム入力領域などのウェブ・アプリケーション内の領域に挿入します。意図しない動作を発生させることで、不正なデータ処理を実行したり、ユーザーの一覧やパスワードや場合によっては機密データへのアクセスが可能になる恐れもあります。</p>
+
+  <h2>デモページについて</h2>
+  <p>デモとして制作したページ(level0.php)は、同じディレクトリにあるlogディレクトリやpicturesディレクトリのファイルを選択してWebページ上に表示するページです。</p>
+  <p>このページのテキストエリアに<code class="value">ahadam0.jpg</code>と入力すると以下のようになります。</p>
+
+  <img src=./lfi/lfi1.png width=90%>
+  
+  <p>jpgファイルの場合、phpでは以下のようなコマンドが実行されています。</p>
+  <code class="php">echo "&lt;img src=./pictures/$file width=100%&gt;";</code>
+  <p>この<code class="val">$file</code>には入力した<code class="value">ahadam0.jpg</code>が代入されているので以下のようになります。</p>
+  <code class="php">echo "&lt;img src=./pictures/ahadam0.jpg width=100%&gt;";</code>
+  <p>このコマンドが実行されると、htmlでは<code class="value">&lt;img src=./pictures/ahadam0.jpg width=100%&gt;</code>が実行されて画像が表示されます。</p>
+  <br>
+
+  <p>また<code class="value">access.log</code>と入力すると以下のようになります。</p>
+
+  <img src=./lfi/lfi2.png width=90%>
+
+  <p>logファイルの場合、phpでは以下のようなコマンドが実行されます。</p>
+  <code class="php">readfile("./log/$file");</code>
+  <p>この<code class="val">$file</code>には入力した<code class="value">access.log</code>が代入されているので以下のようになります。</p>
+  <code class="php">readfile("./log/access.log");</code>
+  <p>このコマンドが実行されると、logディレクトリにある<code class="value">access.log</code>の内容を表示します。</p>
+  <br>
+
+  <p>ここにjpgファイルやlogファイルの代わりに<code class="value">./secret.txt</code>と入力すると以下のようになります。</p>
+
+  <img src=./lfi/lfi3.png>
+
+  <p>この場合、phpでは以下のようなコマンドが実行されます。</p>
+  <code class="php">readfile("$file");</code>
+  <p>この<code class="val">$file</code>には入力した<code class="value">./secret.txt</code>が代入されているので以下のようになります。</p>
+  <code class="php">readfile("./secret.txt");</code>
+  <p>このコマンドが実行されると、同じディレクトリにある<code class="value">secret.txt</code>の内容を表示します。</p>
+
+  <h2>まとめ</h2>
+  <p>上記で説明したように、ユーザーからの入力を確認しないことでサーバー上のファイルを読み込むことができる脆弱性がローカルファイルインクルード(Local File Include)です。</p>
+
+  <h2>デモページ</h2>
+  <p>以下のデモページの全てで<code class="value">/etc/passwd</code>ファイルを表示させてみてください。</p>
+  <ul>
+    <li>
+      <p>
+        <a href="./level0.php">Level 0</a> 入力に対してフィルタリング無し
+      </p>
+    </li>
+    <li>
+      <p>
+        <a href="./level1.php">Level 1</a> jpgの場合は./jpgの下で、logの場合は./logの下でコマンドを実行
+      </p>
+    </li>
+    <li>
+      <p>
+        <a href="./level2.php">Level 2</a> 拡張子に"jpg"か"log"がついている場合にのみ実行 (ここで詰まってます)
+      </p>
+    </li>
+  </ul>
+  <script src="./main.js"></script>
+</body>
+</html>
